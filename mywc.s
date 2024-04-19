@@ -1,61 +1,35 @@
-/*--------------------------------------------------------------------*/
-/* mywc.s                                                             */
-/* Author: Trevor Connolly                                               */
-/*--------------------------------------------------------------------*/
+    .section .data
+lLineCount: .word 0
+lWordCount: .word 0
+lCharCount: .word 0
+iInWord: .word FALSE
 
-#include <stdio.h>
-#include <ctype.h>
+    .section .bss
+iChar:  .skip 4
 
-/*--------------------------------------------------------------------*/
 
-/* In lieu of a boolean data type. */
-enum {FALSE, TRUE};
 
-/*--------------------------------------------------------------------*/
+    .section .text
+    .equ    MAIN_STACK_BYTECOUNT, 16
 
-static long lLineCount = 0;      /* Bad style. */
-static long lWordCount = 0;      /* Bad style. */
-static long lCharCount = 0;      /* Bad style. */
-static int iChar;                /* Bad style. */
-static int iInWord = FALSE;      /* Bad style. */
 
-/*--------------------------------------------------------------------*/
+    .global main
 
-/* Write to stdout counts of how many lines, words, and characters
-   are in stdin. A word is a sequence of non-whitespace characters.
-   Whitespace is defined by the isspace() function. Return 0. */
+main:
 
-int main(void)
-{
-   loop1: 
-    if ((iChar = getchar()) == EOF) goto endloop1;
-      lCharCount++;
+    // prologue 
+    sub sp, sp, MAIN_STACK_BYTECOUNT
+    str x30, [sp]
+    adr x0, lLineCount
+    ldr w1, [x0]
+    adr x0, lWordCount
+    ldr w2, [x0]
+    adr x0, lCharCount
+    ldr w3, [x0]
+    adr x0, iInWord
+    ldr w4, [x0]
+    adr x0, iChar
+    ldr w5, [x0]
 
-      if (!(isspace(iChar))) goto else1;
-      {
-         if (!(iInWord)) goto endif2;
-         {
-            lWordCount++;
-            iInWord = FALSE;
-         } endif2:
-         goto endif1
-      }
-      else1:
-      {
-         if (iInWord) goto endif1
-            iInWord = TRUE;
-      } endif1:
-
-      if (iChar != '\n') goto endif3;
-         lLineCount++;
-         endif3:
-         goto loop1;
-   endloop1:
-
-   if (! iInWord) goto endif4;
-      lWordCount++;
-      endif4:
-
-   printf("%7ld %7ld %7ld\n", lLineCount, lWordCount, lCharCount);
-   return 0;
-}
+    // loop1: if ((iChar = getchar()) == EOF) goto endloop1;
+    cmp w5, 
