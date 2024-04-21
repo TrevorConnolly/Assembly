@@ -53,7 +53,7 @@
         // if (!(isspace(iChar))) goto else1;
         bl isspace // Compare to whitespace
         cmp w0, 0
-        bne else1
+        beq else1
 
         // if (!(iInWord)) goto endif2;
         ldr w26, [x25] // Load up most recent iInWord
