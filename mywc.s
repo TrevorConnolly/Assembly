@@ -1,17 +1,17 @@
-        .section .rodata, ""
+        .section .rodata
     printfFormatStr:
             .string "%7ld %7ld %7ld\n"
 
-        .section .data, ""
+        .section .data
     lLineCount: .quad 0
     lWordCount: .quad 0
     lCharCount: .quad 0
     iInWord: .word 0
 
-        .section .bss, ""
+        .section .bss
     iChar:  .skip 4
 
-        .section .text, ""
+        .section .text
         .equ    MAIN_STACK_BYTECOUNT, 16
 
         .global main
