@@ -1,0 +1,5 @@
+{
+    "files.associations": {
+        "bigint.h": "c"
+    }
+}
