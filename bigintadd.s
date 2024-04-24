@@ -7,55 +7,72 @@
     .section .text
 
         .global BigInt_add
-        .global BigInt_larger
 
         .equ TRUE, 1
         .equ FALSE, 0
-        .equ OADDEND1, 48
-        .equ OADDEND2, 56
-        .equ OSUM, 64
-        .equ ULCARRY, 80
-        .equ ULSUM, 88
-        .equ LINDEX, 96
-        .equ LSUMLENGTH, 104
+        .equ OADDEND1, 8
+        .equ OADDEND2, 16
+        .equ OSUM, 24
+        .equ ULCARRY, 32
+        .equ ULSUM, 40
+        .equ LINDEX, 48
+        .equ LSUMLENGTH, 56
+
+        
         .equ LLENGTH, 0
         .equ MAX_DIGITS, 32768
         .equ DIGITS_OFFSET, 8
-        .equ ULSize, 3
-        .equ MAIN_STACK_BYTECOUNT, 32
+        .equ ULSHIFT, 3
+        .equ BIGINTADD_STACK_BYTECOUNT, 64
+        .equ LARGER_BYTECOUNT, 32
+        .equ LLENGTHONE, 8
+        .equ LLENGTHTWO, 16
+        .equ LLARGER, 24
 
 
 
-    BigInt_larger:
+BigInt_larger:
 
         // store variable lLarger in stack register x2
-        sub sp, sp, #8
-        str x2, [sp]
-        ldr x3, [sp]
+        // Prologue
+        sub sp, sp, LARGER_BYTECOUNT
 
+        // long lLarger;
+        str     x0, [sp, LLENGTHONE]
+        str     x1, [sp, LLENGTHTWO]
+        str     x30, [sp]
+
+        // if (lLength1 > lLength2) goto else1;
         cmp     x0, x1
-        ble    else1
-        mov     x3, x0
+        bgt    else1
+        // lLarger = lLength2;
+        str     x1, [sp, LLARGER]
+
         b endif1
 
     else1:
-        mov x3, x1
+        str     x0, [sp, LLARGER]
         
     endif1:
-        mov x0, x3
+        // return lLarger;
+        ldr     x0, [sp, LLARGER]
+        // Epilogue
+        ldr     x30, [sp]
+        add     sp, sp, LARGER_BYTECOUNT
         ret
+
+    .size   BigInt_larger, (. - BigInt_larger)
 
     BigInt_add:
 
         // Prologue
-        sub     sp, sp, MAIN_STACK_BYTECOUNT
-        stp     x29, x30, [sp]
+        sub     sp, sp, BIGINTADD_STACK_BYTECOUNT
+        str     x30, [sp]
 
         // Store parameters on the stack
         str     x0, [sp, OADDEND1]     // Store oAddend1
         str     x1, [sp, OADDEND2]     // Store oAddend2
         str     x2, [sp, OSUM]         // Store oSum
-
 
         // lSumLength = BigInt_larger(oAddend1->lLength, oAddend2->lLength);
         ldr     x0, [sp, OADDEND1]
@@ -76,7 +93,7 @@
         add     x0, x0, DIGITS_OFFSET  // Pointer to the digits array
         mov     x1, 0
         mov     x2, MAX_DIGITS
-        lsl     x2, x2, ULSize         // MAX_DIGITS * sizeof(unsigned long)
+        lsl     x2, x2, ULSHIFT        // MAX_DIGITS * sizeof(unsigned long)
         bl      memset
 
     initialize:
@@ -93,7 +110,7 @@
         ldr     x0, [sp, LINDEX]
         ldr     x1, [sp, LSUMLENGTH]
         cmp     x0, x1
-        bge    check_carry
+        bge     check_carry
 
 
         // ulSum = ulCarry;
@@ -105,44 +122,48 @@
         str     x0, [sp, ULCARRY]
 
         // ulSum += oAddend1->aulDigits[lIndex];
-        ldr     x2, [sp, OADDEND1]
-        add     x2, x2, DIGITS_OFFSET  // Pointer to the digits array
-        ldr     x1, [sp, LINDEX]
-        lsl     x1, x1, ULSize         // Multiply current index by size of (ul)
-        add     x2, x2, x1
-        ldr     x3, [x2]
-        ldr     x2, [sp, ULSUM]
-        add     x2, x2, x3
-        str     x2, [sp, ULSUM]
+        ldr     x1, [sp, OADDEND1]
+        add     x1, x1, DIGITS_OFFSET  // Pointer to the digits array
+        ldr     x2, [sp, LINDEX]
+        lsl     x2, x2, ULSHIFT         // Multiply current index by size of (ul)
+        add     x1, x1, x2
+        ldr     x2, [x1]
+        ldr     x1, [sp, ULSUM]
+        add     x1, x1, x2
+        str     x1, [sp, ULSUM]
+
 
         // if (ulSum >= oAddend1->aulDigits[lIndex]) goto add_second; 
+        ldr     x3, [sp, ULSUM]
         cmp     x3, x2
-        blt    add_second
+        bhs     add_second
 
         // ulCarry = 1;
-        mov     x2, 1
-        str     x2, [sp, ULCARRY]
+        mov     x0, 1
+        str     x0, [sp, ULCARRY]
 
     add_second:
 
         // ulSum += oAddend2->aulDigits[lIndex];
-        ldr     x2, [sp, OADDEND2]
-        add     x2, x2, DIGITS_OFFSET
-        ldr     x1, [sp, LINDEX]
-        lsl     x1, x1, ULSize
-        add     x2, x2, x1
-        ldr     x3, [x2]
-        ldr     x2, [sp, ULSUM]
-        add     x2, x2, x3
-        str     x2, [sp, ULSUM]
+
+        ldr     x1, [sp, OADDEND2]
+        add     x1, x1, DIGITS_OFFSET  // Pointer to the digits array
+        ldr     x2, [sp, LINDEX]
+        lsl     x2, x2, ULSHIFT        // Multiply current index by size of (ul)
+        add     x1, x1, x2
+        ldr     x2, [x1]
+        ldr     x1, [sp, ULSUM]
+        add     x1, x1, x2
+        str     x1, [sp, ULSUM]
 
         // if (ulSum >= oAddend2->aulDigits[lIndex]) goto store_sum;
+        ldr     x3, [sp, ULSUM]
         cmp     x3, x2
-        blo     store_sum
+        bhs     store_sum
 
         // ulCarry = 1;
-        mov     x2, 1
-        str     x2, [sp, ULCARRY]
+        mov     x0, 1
+        str     x0, [sp, ULCARRY]
 
     store_sum:
         
@@ -150,7 +171,7 @@
         ldr     x1, [sp, OSUM]
         add     x1, x1, DIGITS_OFFSET  // pointer to the digits array
         ldr     x2, [sp, LINDEX]
-        lsl     x2, x2, ULSize
+        lsl     x2, x2, ULSHIFT
         add     x1, x1, x2
         ldr     x2, [sp, ULSUM]
         str     x2, [x1]
@@ -178,7 +199,7 @@
         ldr     x1, [sp, OSUM]
         add     x1, x1, DIGITS_OFFSET
         ldr     x0, [sp, LSUMLENGTH]
-        lsl     x0, x0, ULSize
+        lsl     x0, x0, ULSHIFT
         add     x1, x1, x0
         mov     x0, 1
         str     x0, [x1]
@@ -205,7 +226,8 @@
     return:
 
         // Epilogue
-        ldp     x29, x30, [sp]
-        add     sp, sp, MAIN_STACK_BYTECOUNT
+        ldr     x30, [sp]
+        add     sp, sp, BIGINTADD_STACK_BYTECOUNT
         ret
 
+    .size   BigInt_add, (. - BigInt_add)
