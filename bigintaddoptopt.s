@@ -1,4 +1,4 @@
-    .section .rodata
+   .section .rodata
 
     .section .data
 
@@ -127,12 +127,12 @@
     loop1:
 
         // ulSum = ulCarry;
-        mov     x0, ULCARRY_VAR
-        mov     ULSUM_VAR, x0 
+        // mov     x0, ULCARRY_VAR
+        // mov     ULSUM_VAR, x0 
 
         // ulCarry = 0;
-        mov     x0, 0
-        mov     ULCARRY_VAR, x0 
+        // mov     x0, 0
+        // mov     ULCARRY_VAR, x0 
 
         // ulSum += oAddend1->aulDigits[lIndex];
         mov     x1, OADDEND1_VAR
@@ -141,17 +141,17 @@
         lsl     x2, x2, ULSize         // Multiply current index by size of (ul)
         add     x1, x1, x2
         ldr     x2, [x1]
-        add     ULSUM_VAR, ULSUM_VAR, x2
+        adcs    ULSUM_VAR, ULSUM_VAR, x2
 
 
         // if (ulSum >= oAddend1->aulDigits[lIndex]) goto add_second; 
-        mov     x3, ULSUM_VAR
-        cmp     x3, x2
-        bhs     add_second
+        // mov     x3, ULSUM_VAR
+        // cmp     x3, x2
+        // bhs     add_second
 
         // ulCarry = 1;
-        mov     x0, 1
-        mov     ULCARRY_VAR, x0 
+        // mov     x0, 1
+        // mov     ULCARRY_VAR, x0 
 
     add_second:
 
@@ -163,16 +163,16 @@
         lsl     x2, x2, ULSize         // Multiply current index by size of (ul)
         add     x1, x1, x2
         ldr     x2, [x1]
-        add	ULSUM_VAR, ULSUM_VAR, x2
+        adcs    ULSUM_VAR, ULSUM_VAR, x2
 
         // if (ulSum >= oAddend2->aulDigits[lIndex]) goto store_sum;
-        mov     x3, ULSUM_VAR
-        cmp     x3, x2
-        bhs     store_sum
+        // mov     x3, ULSUM_VAR
+        // cmp     x3, x2
+        // bhs     store_sum
 
         // ulCarry = 1;
-        mov     x0, 1
-        mov     ULCARRY_VAR, x0 
+        // mov     x0, 1
+        // mov     ULCARRY_VAR, x0 
 
     store_sum:
         
@@ -186,9 +186,7 @@
         str     x2, [x1]
 
         // lIndex++;
-        mov     x0, LINDEX_VAR
-        add     x0, x0, 1
-        mov     LINDEX_VAR, x0 
+        add     LINDEX_VAR, LINDEX_VAR, 1
                                                                       
     check_end:
 
@@ -202,13 +200,11 @@
     check_carry:
         
         // if (ulCarry != 1) goto set_length;
-        mov     x0, ULCARRY_VAR
-        cmp     x0, 1
-        bne     set_length
+        cmp     x0, x1
+        bcc     set_length
 
         // if (lSumLength == MAX_DIGITS) return FALSE;
-        mov     x0, LSUMLENGTH_VAR
-        cmp     x0, MAX_DIGITS
+        cmp     LSUMLENGTH_VAR, MAX_DIGITS
         beq     return_false
 
         // oSum->aulDigits[lSumLength] = 1;
@@ -221,9 +217,8 @@
         str     x0, [x1]
 
         // lSumLength++;
-        mov     x0, LSUMLENGTH_VAR
-        add     x0, x0, 1
-        mov     LSUMLENGTH_VAR, x0 
+        add     LSUMLENGTH_VAR, LSUMLENGTH_VAR, 1
+        
 
     set_length:
 
