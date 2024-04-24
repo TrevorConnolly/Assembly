@@ -163,9 +163,7 @@
         lsl     x2, x2, ULSize         // Multiply current index by size of (ul)
         add     x1, x1, x2
         ldr     x2, [x1]
-        mov     x1, ULSUM_VAR
-        add     x1, x1, x2
-        mov     ULSUM_VAR, x1 
+        add	ULSUM_VAR, ULSUM_VAR, x2
 
         // if (ulSum >= oAddend2->aulDigits[lIndex]) goto store_sum;
         mov     x3, ULSUM_VAR
@@ -259,4 +257,3 @@
         ret
 
     .size   BigInt_add, (. - BigInt_add)
-    
