@@ -119,10 +119,10 @@
         mov     LINDEX_VAR, x0 
 
         // if (lIndex >= lSumLength) goto check_carry;
-        mov     x0, LINDEX_VAR
-        mov     x1, LSUMLENGTH_VAR
-        cmp     x0, x1
-        bge     check_carry
+        // mov     x0, LINDEX_VAR
+        // mov     x1, LSUMLENGTH_VAR
+        // cmp     x0, x1
+        // bge     check_carry
 
         // clear carry bit to ensure it's 0
         mov     x1, #0
