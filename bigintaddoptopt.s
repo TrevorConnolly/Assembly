@@ -128,7 +128,7 @@
         mov     x1, #0
         mov     x2, #0
         adcs    x2, x1, x2
-        
+
     loop1:
 
         // ulSum = ulCarry;
@@ -205,7 +205,6 @@
     check_carry:
         
         // if (ulCarry != 1) goto set_length;
-        cmp     x0, x1
         bcc     set_length
 
         // if (lSumLength == MAX_DIGITS) return FALSE;
