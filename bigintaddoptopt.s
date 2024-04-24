@@ -124,6 +124,11 @@
         cmp     x0, x1
         bge     check_carry
 
+        // clear carry bit to ensure it's 0
+        mov     x1, #0
+        mov     x2, #0
+        adcs    x2, x1, x2
+        
     loop1:
 
         // ulSum = ulCarry;
