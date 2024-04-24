@@ -195,11 +195,11 @@
                                                                       
     check_end:
 
-        // if (lIndex < lSumLength) goto loop1;
+        // if ((lIndex - lSumLength) < 0 ) goto loop1;
         mov     x0, LINDEX_VAR
         mov     x1, LSUMLENGTH_VAR
-        cmp     x0, x1
-        blt     loop1
+        sub     x0, x0, x1
+        cbnz    x0, loop1 
 
 
     check_carry:
