@@ -19,13 +19,14 @@
         .equ LSUMLENGTH, 56
         .equ LLENGTHONE, 64
         .equ LLENGTHTWO, 72
+        .equ LLARGER, 80
 
 
         .equ LLENGTH, 0
         .equ MAX_DIGITS, 32768
         .equ DIGITS_OFFSET, 8
         .equ ULSize, 3
-        .equ BIGINTADD_STACK_BYTECOUNT, 80
+        .equ BIGINTADD_STACK_BYTECOUNT, 96
 
 
         // Local variable registers:
@@ -35,13 +36,13 @@
         ULSUM_VAR       .req x25
         LINDEX_VAR      .req x26
         LSUMLENGTH_VAR  .req x27
+        LLARGER_VAR     .req x28
 
 
         // Parameter variable registers:
         OADDEND1_VAR    .req x19
         OADDEND2_VAR    .req x20
         OSUM_VAR        .req x21
-
 
 
 
@@ -62,6 +63,8 @@
         str     x25, [sp, ULSUM]
         str     x26, [sp, LINDEX]
         str     x27, [sp, LSUMLENGTH]
+        str     x28, [sp, LLARGER]
+
 
 
         // Store parameters in registers
@@ -71,26 +74,27 @@
 
 
         // lSumLength = BigInt_larger(oAddend1->lLength, oAddend2->lLength);
-        mov     x0, OADDEND1_VAR
-        ldr     x0, [x0, LLENGTH]
-        mov     x1, OADDEND2_VAR
-        ldr     x1, [x1, LLENGTH]
+        mov     LLENGTHONE_VAR, OADDEND1_VAR
+        ldr     LLENGTHONE_VAR, [LLENGTHONE_VAR, LLENGTH]
+        mov     LLENGTHTWO_VAR, OADDEND2_VAR
+        ldr     LLENGTHTWO_VAR, [LLENGTHTWO_VAR, LLENGTH]
 
         // if (lLength1 > lLength2) goto else1;
-        cmp     x0, x1
+        cmp     LLENGTHONE_VAR, LLENGTHTWO_VAR
         bgt     else1
         
-        // lSumLength = lLength2;
-        mov     LSUMLENGTH_VAR, x1
-
+        // lLarger = lLength2;
+        mov     LLARGER_VAR, LLENGTHTWO_VAR
         b endif1
 
     else1:
-        // lSumLength = lLength2;
-        mov     LSUMLENGTH_VAR, x0
+        // lLarger = lLength2;
+        mov     LLARGER_VAR, LLENGTHONE_VAR
         
 
     endif1:
+        // lSumLength = lLarger;
+        mov     LSUMLENGTH_VAR, LLARGER_VAR
 
         // if (!(oSum->lLength > lSumLength)) goto initialize;
         mov     x0, OSUM_VAR
@@ -114,7 +118,7 @@
         // lIndex = 0;
         mov     LINDEX_VAR, x0 
 
- // if (lIndex >= lSumLength) goto check_carry;
+        // if (lIndex >= lSumLength) goto check_carry;
         mov     x0, LINDEX_VAR
         mov     x1, LSUMLENGTH_VAR
         cmp     x0, x1
@@ -137,9 +141,7 @@
         lsl     x2, x2, ULSize         // Multiply current index by size of (ul)
         add     x1, x1, x2
         ldr     x2, [x1]
-        mov     x1, ULSUM_VAR
-        add     x1, x1, x2
-        mov     ULSUM_VAR, x1 
+        add     ULSUM_VAR, ULSUM_VAR, x2
 
 
         // if (ulSum >= oAddend1->aulDigits[lIndex]) goto add_second; 
@@ -252,7 +254,9 @@
         ldr     x25, [sp, ULSUM]
         ldr     x26, [sp, LINDEX]
         ldr     x27, [sp, LSUMLENGTH]
+        ldr     x28, [sp, LLARGER]
         add     sp, sp, BIGINTADD_STACK_BYTECOUNT
         ret
 
     .size   BigInt_add, (. - BigInt_add)
+    
