@@ -144,15 +144,15 @@ BigInt_larger:
         mov     ULCARRY_VAR, x0 
 
         // lIndex = 0;
-        mov     LINDEX_VAR, x0
-        
+        mov     LINDEX_VAR, x0 
 
-        // if (lIndex >= lSumLength) goto check_carry;
+
+    // if (lIndex >= lSumLength) goto check_carry;
         mov     x0, LINDEX_VAR
         mov     x1, LSUMLENGTH_VAR
         cmp     x0, x1
         bge     check_carry
-        
+
     loop1:
 
         // ulSum = ulCarry;
@@ -222,9 +222,7 @@ BigInt_larger:
         mov     x0, LINDEX_VAR
         add     x0, x0, 1
         mov     LINDEX_VAR, x0 
-        b       loop1     
-                             // restart loop
-
+                                                                      
     check_end:
 
         // if (lIndex < lSumLength) goto loop1;
