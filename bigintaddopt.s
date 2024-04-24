@@ -170,9 +170,7 @@ BigInt_larger:
         lsl     x2, x2, ULSize         // Multiply current index by size of (ul)
         add     x1, x1, x2
         ldr     x2, [x1]
-        mov     x1, ULSUM_VAR
-        add     x1, x1, x2
-        mov     ULSUM_VAR, x1 
+        add     ULSUM_VAR, ULSUM_VAR, x2 
 
 
         // if (ulSum >= oAddend1->aulDigits[lIndex]) goto add_second; 
@@ -194,9 +192,7 @@ BigInt_larger:
         lsl     x2, x2, ULSize         // Multiply current index by size of (ul)
         add     x1, x1, x2
         ldr     x2, [x1]
-        mov     x1, ULSUM_VAR
-        add     x1, x1, x2
-        mov     ULSUM_VAR, x1 
+        add     ULSUM_VAR, ULSUM_VAR, x2
 
         // if (ulSum >= oAddend2->aulDigits[lIndex]) goto store_sum;
         mov     x3, ULSUM_VAR
@@ -219,9 +215,7 @@ BigInt_larger:
         str     x2, [x1]
 
         // lIndex++;
-        mov     x0, LINDEX_VAR
-        add     x0, x0, 1
-        mov     LINDEX_VAR, x0 
+        add     LINDEX_VAR, LINDEX_VAR, 1
         b       loop1                  // restart loop
 
 
@@ -233,8 +227,7 @@ BigInt_larger:
         bne     set_length
 
         // if (lSumLength == MAX_DIGITS) return FALSE;
-        mov     x0, LSUMLENGTH_VAR
-        cmp     x0, MAX_DIGITS
+        cmp     LSUMLENGTH_VAR, MAX_DIGITS
         beq     return_false
 
         // oSum->aulDigits[lSumLength] = 1;
@@ -247,9 +240,8 @@ BigInt_larger:
         str     x0, [x1]
 
         // lSumLength++;
-        mov     x0, LSUMLENGTH_VAR
-        add     x0, x0, 1
-        mov     LSUMLENGTH_VAR, x0 
+        add     LSUMLENGTH_VAR, LSUMLENGTH_VAR, 1
+    
 
     set_length:
 
