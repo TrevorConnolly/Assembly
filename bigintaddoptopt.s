@@ -127,7 +127,7 @@
         // clear carry bit to ensure it's 0
         mov     x1, #0
         mov     x2, #0
-        adcs    x2, x1, x2
+        adds    x2, x1, x2
 
     loop1:
 
