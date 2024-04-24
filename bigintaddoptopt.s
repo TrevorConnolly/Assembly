@@ -17,79 +17,30 @@
         .equ ULSUM, 40
         .equ LINDEX, 48
         .equ LSUMLENGTH, 56
+        .equ LLENGTHONE, 64
+        .equ LLENGTHTWO, 72
 
-        
+
         .equ LLENGTH, 0
         .equ MAX_DIGITS, 32768
         .equ DIGITS_OFFSET, 8
         .equ ULSize, 3
-        .equ BIGINTADD_STACK_BYTECOUNT, 64
-        .equ LARGER_BYTECOUNT, 32
-        .equ LLENGTHONE, 8
-        .equ LLENGTHTWO, 16
-        .equ LLARGER, 24
+        .equ BIGINTADD_STACK_BYTECOUNT, 80
+
 
         // Local variable registers:
-        LLARGER_VAR     .req x24
-        ULCARRY_VAR     .req x25
-        ULSUM_VAR       .req x26
-        LINDEX_VAR      .req x27
-        LSUMLENGTH_VAR  .req x28
+        LLENGTHONE_VAR  .req x22
+        LLENGTHTWO_VAR  .req x23
+        ULCARRY_VAR     .req x24
+        ULSUM_VAR       .req x25
+        LINDEX_VAR      .req x26
+        LSUMLENGTH_VAR  .req x27
+
 
         // Parameter variable registers:
-        LLENGTHONE_VAR  .req x19
-        LLENGTHTWO_VAR  .req x20
-        OADDEND1_VAR    .req x21
-        OADDEND2_VAR    .req x22
-        OSUM_VAR        .req x23
-
-
-
-
-
-        /* Return the larger of lLength1 and lLength2. */
-BigInt_larger:
-
-        // store variable lLarger in stack register x2
-        // Prologue
-        sub sp, sp, LARGER_BYTECOUNT
-        str     x30, [sp]
-        str     x19, [sp, LLENGTHONE]
-        str     x20, [sp, LLENGTHTWO]
-        str     x24, [sp, LLARGER]
-
-
-        // store parameters;
-        mov     LLENGTHONE_VAR, x0
-        mov     LLENGTHTWO_VAR, x1
-
-
-        // if (lLength1 > lLength2) goto else1;
-        cmp     LLENGTHONE_VAR, LLENGTHTWO_VAR
-        bgt    else1
-        
-        // lLarger = lLength2;
-        mov     LLARGER_VAR, LLENGTHTWO_VAR
-
-        b endif1
-
-    else1:
-        // lLarger = lLength2;
-        mov     LLARGER_VAR, LLENGTHONE_VAR
-        
-    endif1:
-        // return lLarger;
-        mov     x0, LLARGER_VAR
-
-        // Epilogue
-        ldr     x30, [sp]
-        ldr     x19, [sp, LLENGTHONE]
-        ldr     x20, [sp, LLENGTHTWO]
-        ldr     x24, [sp, LLARGER]
-        add     sp, sp, LARGER_BYTECOUNT
-        ret
-
-    .size   BigInt_larger, (. - BigInt_larger)
+        OADDEND1_VAR    .req x19
+        OADDEND2_VAR    .req x20
+        OSUM_VAR        .req x21
 
 
 
@@ -102,13 +53,15 @@ BigInt_larger:
         // Prologue
         sub     sp, sp, BIGINTADD_STACK_BYTECOUNT
         str     x30, [sp]
-        str     x21, [sp, OADDEND1]
-        str     x22, [sp, OADDEND2]
-        str     x23, [sp, OSUM]
-        str     x25, [sp, ULCARRY]
-        str     x26, [sp, ULSUM]
-        str     x27, [sp, LINDEX]
-        str     x28, [sp, LSUMLENGTH]
+        str     x19, [sp, OADDEND1]
+        str     x20, [sp, OADDEND2]
+        str     x21, [sp, OSUM]
+        str     x22, [sp, LLENGTHONE]
+        str     x23, [sp, LLENGTHTWO]
+        str     x24, [sp, ULCARRY]
+        str     x25, [sp, ULSUM]
+        str     x26, [sp, LINDEX]
+        str     x27, [sp, LSUMLENGTH]
 
 
         // Store parameters in registers
@@ -116,13 +69,28 @@ BigInt_larger:
         mov     OADDEND2_VAR, x1      // Store oAddend2
         mov     OSUM_VAR, x2          // Store oSum
 
+
         // lSumLength = BigInt_larger(oAddend1->lLength, oAddend2->lLength);
         mov     x0, OADDEND1_VAR
         ldr     x0, [x0, LLENGTH]
         mov     x1, OADDEND2_VAR
         ldr     x1, [x1, LLENGTH]
-        bl      BigInt_larger
-        mov     LSUMLENGTH_VAR, x0 
+
+        // if (lLength1 > lLength2) goto else1;
+        cmp     x0, x1
+        bgt     else1
+        
+        // lSumLength = lLength2;
+        mov     LSUMLENGTH_VAR, x1
+
+        b endif1
+
+    else1:
+        // lSumLength = lLength2;
+        mov     LSUMLENGTH_VAR, x0
+        
+
+    endif1:
 
         // if (!(oSum->lLength > lSumLength)) goto initialize;
         mov     x0, OSUM_VAR
@@ -146,8 +114,7 @@ BigInt_larger:
         // lIndex = 0;
         mov     LINDEX_VAR, x0 
 
-
-    // if (lIndex >= lSumLength) goto check_carry;
+ // if (lIndex >= lSumLength) goto check_carry;
         mov     x0, LINDEX_VAR
         mov     x1, LSUMLENGTH_VAR
         cmp     x0, x1
@@ -231,6 +198,7 @@ BigInt_larger:
         cmp     x0, x1
         blt     loop1
 
+
     check_carry:
         
         // if (ulCarry != 1) goto set_length;
@@ -275,16 +243,16 @@ BigInt_larger:
 
         // Epilogue
         ldr     x30, [sp]
-        ldr     x30, [sp]
-        ldr     x21, [sp, OADDEND1]
-        ldr     x22, [sp, OADDEND2]
-        ldr     x23, [sp, OSUM]
-        ldr     x25, [sp, ULCARRY]
-        ldr     x26, [sp, ULSUM]
-        ldr     x27, [sp, LINDEX]
-        ldr     x28, [sp, LSUMLENGTH]
+        ldr     x19, [sp, OADDEND1]
+        ldr     x20, [sp, OADDEND2]
+        ldr     x21, [sp, OSUM]
+        ldr     x22, [sp, LLENGTHONE]
+        ldr     x23, [sp, LLENGTHTWO]
+        ldr     x24, [sp, ULCARRY]
+        ldr     x25, [sp, ULSUM]
+        ldr     x26, [sp, LINDEX]
+        ldr     x27, [sp, LSUMLENGTH]
         add     sp, sp, BIGINTADD_STACK_BYTECOUNT
         ret
 
     .size   BigInt_add, (. - BigInt_add)
-    
